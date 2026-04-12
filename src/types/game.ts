@@ -1,5 +1,7 @@
 // ── Core game types ──────────────────────────────────────────────────────────
 
+export type GlassSize = 'small' | 'medium' | 'large';
+
 export type CoffeeName =
   | 'Espresso'
   | 'Double Espresso'

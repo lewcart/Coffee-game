@@ -1,13 +1,7 @@
 .app {
   min-height: 100dvh;
   display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  justify-content: center;
-  gap: 24px;
-  background: #12080300;
-  padding: 40px 24px;
+  flex-direction: column;
 }
 
 /* ── Demo controls ────────────────────────────────────────────────────────── */
