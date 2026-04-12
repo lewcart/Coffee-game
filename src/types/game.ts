@@ -86,6 +86,25 @@ export interface DrinkAttempt {
   endTimeMs: number;
 }
 
+// ── Order flash / active order types ────────────────────────────────────────
+
+export type OrderStatus = 'flashing' | 'active' | 'completed' | 'expired';
+
+export interface ActiveOrder {
+  /** Unique order id (used to key renders and scoring) */
+  id: string;
+  recipe: DrinkRecipe;
+  /** 1-based position in the current level queue */
+  orderIndex: number;
+  /** Total number of orders this level */
+  totalOrders: number;
+  /** Date.now() when the 18-sec countdown begins (0 while still flashing) */
+  timerStartedAt: number;
+  /** Duration of the countdown in ms (18 000 for tier 1) */
+  timeLimitMs: number;
+  status: OrderStatus;
+}
+
 // ── Per-drink scoring detail ─────────────────────────────────────────────────
 
 /** Accuracy breakdown for a single ingredient */

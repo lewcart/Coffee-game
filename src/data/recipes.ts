@@ -87,3 +87,29 @@ export function getRecipeById(id: string): DrinkRecipe | undefined {
 export function getRecipeByName(name: string): DrinkRecipe | undefined {
   return RECIPES.find((r) => r.name === name);
 }
+
+// ── Tier-1 espresso ─────────────────────────────────────────────────────────
+
+/** Number of orders in a tier-1 level */
+export const TIER_1_ORDER_COUNT = 5;
+
+/** Timer duration (ms) for each tier-1 order — starts after the word-reveal flash */
+export const TIER_1_TIME_LIMIT_MS = 18_000;
+
+/** Tier-1: pure espresso only — no milk, no water */
+export const TIER_1_ESPRESSO_IDS = ['espresso', 'double-espresso'] as const;
+
+export const TIER_1_ESPRESSO_RECIPES: DrinkRecipe[] = RECIPES.filter((r) =>
+  (TIER_1_ESPRESSO_IDS as readonly string[]).includes(r.id),
+);
+
+/**
+ * Build a randomised queue of `count` tier-1 espresso orders.
+ * Pure random sampling — both recipe types appear roughly equally over 5 orders.
+ */
+export function generateTier1Orders(count: number): DrinkRecipe[] {
+  return Array.from(
+    { length: count },
+    () => TIER_1_ESPRESSO_RECIPES[Math.floor(Math.random() * TIER_1_ESPRESSO_RECIPES.length)],
+  );
+}

@@ -117,3 +117,16 @@
 .demo-launch:active {
   transform: scale(0.97);
 }
+
+.demo-status {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--coffee-caramel, #c8823a);
+  letter-spacing: 0.04em;
+}
+
+.demo-order-wrap {
+  margin-top: 16px;
+  display: flex;
+  justify-content: center;
+}
