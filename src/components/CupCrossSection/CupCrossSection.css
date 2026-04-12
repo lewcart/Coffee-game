@@ -1,0 +1,69 @@
+.cup-cross-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+/* ── SVG cup ─────────────────────────────────────────────────────────────── */
+
+.cup-svg {
+  width: 200px;
+  height: 250px;
+  overflow: visible;
+  filter: drop-shadow(0 10px 28px rgba(0, 0, 0, 0.55))
+          drop-shadow(0 2px 6px rgba(0, 0, 0, 0.35));
+}
+
+/* ── Liquid layer animation ──────────────────────────────────────────────── */
+
+/*
+ * Each layer rect starts collapsed at its bottom edge (scaleY = 0, anchored
+ * to bottom via transform-origin). When .cup-layer--visible is applied, it
+ * expands upward to its full height.
+ *
+ * transform-box: fill-box makes the transform-origin relative to the element's
+ * own bounding box rather than the SVG viewport.
+ */
+.cup-layer {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  transform: scaleY(0);
+  transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.cup-layer--visible {
+  transform: scaleY(1);
+}
+
+/* ── Legend ──────────────────────────────────────────────────────────────── */
+
+.cup-legend {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 140px;
+}
+
+.cup-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cup-legend-swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  flex-shrink: 0;
+}
+
+.cup-legend-label {
+  font-size: 13px;
+  color: var(--coffee-cream, #f5e6d0);
+  letter-spacing: 0.01em;
+}
