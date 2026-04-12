@@ -34,7 +34,7 @@ const TAP_INCREMENT: Record<string, { amount: number; unit: string }> = {
 const ALL_TAPS = ['espresso-shot', 'hot-water', 'steamed-milk', 'milk-foam'];
 
 /** Converts an ingredient amount to ml-equivalent for the cup visual */
-function toMlEquiv(id: string, amount: number, unit: string): number {
+function toMlEquiv(_id: string, amount: number, unit: string): number {
   if (unit === 'shots') return amount * 30;
   return amount; // ml and g treated 1:1
 }
