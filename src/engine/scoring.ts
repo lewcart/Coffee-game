@@ -106,7 +106,17 @@ export function scoreIngredient(
  */
 const EXTRA_INGREDIENT_PENALTY = 0.1; // fraction deducted per extra ingredient
 
-export function scoreDrink(recipe: DrinkRecipe, attempt: DrinkAttempt): DrinkScoringResult {
+/**
+ * @param timeLimitMs  Optional override for the speed-scoring time limit.
+ *                     Defaults to recipe.timeLimitMs. Pass activeOrder.timeLimitMs
+ *                     when the countdown differs from the recipe's built-in limit
+ *                     (e.g. tier-1 18 s countdown vs. recipe's 30 s default).
+ */
+export function scoreDrink(
+  recipe: DrinkRecipe,
+  attempt: DrinkAttempt,
+  timeLimitMs = recipe.timeLimitMs,
+): DrinkScoringResult {
   const timeTakenMs = attempt.endTimeMs - attempt.startTimeMs;
 
   // Index player ingredients for O(1) lookup
@@ -144,9 +154,9 @@ export function scoreDrink(recipe: DrinkRecipe, attempt: DrinkAttempt): DrinkSco
   const rawAccuracy = Math.max(0, meanIngredientScore - extraPenalty);
   const accuracyScore = Math.round(rawAccuracy * MAX_ACCURACY_PER_DRINK);
 
-  // Speed bonus
-  const timeRemainingMs = Math.max(0, recipe.timeLimitMs - timeTakenMs);
-  const speedBonus = scoreSpeed(timeRemainingMs, recipe.timeLimitMs);
+  // Speed bonus (uses the caller-supplied timeLimitMs, not necessarily recipe.timeLimitMs)
+  const timeRemainingMs = Math.max(0, timeLimitMs - timeTakenMs);
+  const speedBonus = scoreSpeed(timeRemainingMs, timeLimitMs);
 
   const totalScore = accuracyScore + speedBonus;
 

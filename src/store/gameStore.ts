@@ -1,111 +1,132 @@
 import { create } from 'zustand';
-<<<<<<< HEAD
-import type { DrinkAttempt, DrinkRecipe, GlassSize, LevelSummary, OrderResult } from '../types/game';
+import type {
+  DrinkAttempt,
+  DrinkRecipe,
+  GlassSize,
+  LevelSummary,
+  ActiveOrder,
+  OrderResult,
+} from '../types/game';
 import { scoreDrink, buildLevelSummary, MAX_SCORE_PER_DRINK } from '../engine/scoring';
-=======
-import type { LevelSummary, ActiveOrder, OrderResult, DrinkRecipe } from '../types/game';
 import { generateTier1Orders, TIER_1_ORDER_COUNT, TIER_1_TIME_LIMIT_MS } from '../data/recipes';
->>>>>>> df3aeff (COF-010: Order flash system — Espresso tier-1 orders)
 
 type Screen = 'game' | 'levelComplete';
 
-export interface ActiveOrder {
-  orderId: string;
-  recipe: DrinkRecipe;
-  /** 0-based index within the level */
-  orderIndex: number;
-  startTimeMs: number;
+let orderIdCounter = 0;
+
+function makeOrderId(): string {
+  return `order-${++orderIdCounter}`;
 }
 
 interface GameState {
+  // ── Screen ─────────────────────────────────────────────────────────────────
   screen: Screen;
   levelSummary: LevelSummary | null;
   currentLevel: number;
-
-<<<<<<< HEAD
-  currentLevel: number;
-  /** Increments on startLevel/retry to force re-mount of GameScreen */
+  /** Increments each time a level starts or retries — use as <GameScreen key> */
   levelKey: number;
-  ordersTotal: number;
-  pendingRecipes: DrinkRecipe[];
-  activeOrder: ActiveOrder | null;
-  selectedGlass: GlassSize | null;
-  /** ingredientId → accumulated amount added by the player */
-  currentIngredients: Record<string, number>;
-  completedOrders: OrderResult[];
 
-=======
-  // ── Order flash state ──────────────────────────────────────────────────────
+  // ── Level order queue ──────────────────────────────────────────────────────
+  /** Total orders to serve this level */
+  ordersTotal: number;
   /** Recipes waiting to be flashed, in order */
   orderQueue: DrinkRecipe[];
-  /** The order currently on screen (flashing or active) */
+  /** The order currently being flashed or being made */
   activeOrder: ActiveOrder | null;
   /** Scored results accumulated this level */
-  completedOrderResults: OrderResult[];
+  completedOrders: OrderResult[];
+
+  // ── Cup station player input ───────────────────────────────────────────────
+  selectedGlass: GlassSize | null;
+  /** ingredientId → accumulated amount the player has tapped in */
+  currentIngredients: Record<string, number>;
 
   // ── Screen navigation ──────────────────────────────────────────────────────
->>>>>>> df3aeff (COF-010: Order flash system — Espresso tier-1 orders)
   showLevelComplete: (summary: LevelSummary) => void;
   continueToNextLevel: () => void;
   retryLevel: () => void;
 
-<<<<<<< HEAD
-  startLevel: (level: number, recipes: DrinkRecipe[]) => void;
+  // ── Level / order management ───────────────────────────────────────────────
+  /** Generate a fresh order queue and reset all in-level state. */
+  initLevel: (level: number) => void;
+  /** Pull the next recipe from the queue and begin flashing it. */
+  flashNextOrder: () => void;
+  /**
+   * Transition activeOrder from 'flashing' → 'active' and record when
+   * the countdown began. Call this after the OrderFlash word-reveal completes.
+   */
+  activateOrder: () => void;
+  /**
+   * Mark the active order as expired (timer hit zero without submission).
+   * Scores the attempt with whatever ingredients were added and advances.
+   */
+  expireOrder: () => void;
+
+  // ── Cup station ────────────────────────────────────────────────────────────
   selectGlass: (glass: GlassSize) => void;
   tapIngredient: (id: string, amount: number) => void;
   clearIngredients: () => void;
+  /** Score the current ingredient set and advance (next order or level complete). */
   submitDrink: (endTimeMs: number) => void;
 }
 
-function makeOrderId() {
-  return `order-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+// ── Shared advance helper ──────────────────────────────────────────────────────
+// After scoring an order, either flash the next one or trigger level complete.
+function resolveNextState(
+  s: GameState,
+  newCompletedOrders: OrderResult[],
+): Partial<GameState> {
+  const sharedReset: Partial<GameState> = {
+    completedOrders: newCompletedOrders,
+    selectedGlass: null,
+    currentIngredients: {},
+  };
+
+  if (s.orderQueue.length > 0) {
+    const [recipe, ...remaining] = s.orderQueue;
+    const nextOrder: ActiveOrder = {
+      id: makeOrderId(),
+      recipe,
+      orderIndex: newCompletedOrders.length + 1,
+      totalOrders: s.ordersTotal,
+      timerStartedAt: 0,
+      timeLimitMs: TIER_1_TIME_LIMIT_MS,
+      status: 'flashing',
+    };
+    return {
+      ...sharedReset,
+      orderQueue: remaining,
+      activeOrder: nextOrder,
+    };
+  }
+
+  const levelResult = {
+    level: s.currentLevel,
+    orders: newCompletedOrders,
+    maxScore: s.ordersTotal * MAX_SCORE_PER_DRINK,
+  };
+  const summary = buildLevelSummary(levelResult);
+  return {
+    ...sharedReset,
+    activeOrder: null,
+    screen: 'levelComplete',
+    levelSummary: summary,
+  };
 }
-=======
-  // ── Order flash actions ────────────────────────────────────────────────────
-
-  /** Initialise a new level: generate a fresh tier-1 order queue and reset results. */
-  initLevel: (level: number) => void;
-
-  /**
-   * Pull the next recipe from the queue and set it as the activeOrder with
-   * status 'flashing'. No-op if the queue is empty.
-   */
-  flashNextOrder: () => void;
-
-  /**
-   * Transition the active order from 'flashing' → 'active' and record when
-   * the 18-second countdown began. Call this after the word-reveal completes.
-   */
-  activateOrder: () => void;
-
-  /** Record a scored result and mark the active order as 'completed'. */
-  completeOrder: (result: OrderResult) => void;
-
-  /** Mark the active order as 'expired' (timer hit zero). */
-  expireOrder: () => void;
-}
-
-let orderIdCounter = 0;
->>>>>>> df3aeff (COF-010: Order flash system — Espresso tier-1 orders)
 
 export const useGameStore = create<GameState>((set, get) => ({
   screen: 'game',
   levelSummary: null,
   currentLevel: 1,
+  levelKey: 0,
+  ordersTotal: TIER_1_ORDER_COUNT,
   orderQueue: [],
   activeOrder: null,
-  completedOrderResults: [],
-
-  // ── Screen navigation ──────────────────────────────────────────────────────
-
-  currentLevel: 1,
-  levelKey: 0,
-  ordersTotal: 0,
-  pendingRecipes: [],
-  activeOrder: null,
+  completedOrders: [],
   selectedGlass: null,
   currentIngredients: {},
-  completedOrders: [],
+
+  // ── Screen navigation ────────────────────────────────────────────────────────
 
   showLevelComplete: (summary) => set({ screen: 'levelComplete', levelSummary: summary }),
 
@@ -115,43 +136,91 @@ export const useGameStore = create<GameState>((set, get) => ({
       levelSummary: null,
       currentLevel: s.currentLevel + 1,
       levelKey: s.levelKey + 1,
-      pendingRecipes: [],
+      ordersTotal: TIER_1_ORDER_COUNT,
+      orderQueue: [],
       activeOrder: null,
+      completedOrders: [],
       selectedGlass: null,
       currentIngredients: {},
-      completedOrders: [],
     })),
 
-<<<<<<< HEAD
   retryLevel: () =>
     set((s) => ({
       screen: 'game',
       levelSummary: null,
       levelKey: s.levelKey + 1,
-      pendingRecipes: [],
+      ordersTotal: TIER_1_ORDER_COUNT,
+      orderQueue: [],
       activeOrder: null,
+      completedOrders: [],
       selectedGlass: null,
       currentIngredients: {},
-      completedOrders: [],
     })),
 
-  startLevel: (level, recipes) => {
-    const [first, ...rest] = recipes;
+  // ── Level / order management ─────────────────────────────────────────────────
+
+  initLevel: (level) => {
     set({
       currentLevel: level,
-      ordersTotal: recipes.length,
-      pendingRecipes: rest,
+      ordersTotal: TIER_1_ORDER_COUNT,
+      orderQueue: generateTier1Orders(TIER_1_ORDER_COUNT),
+      activeOrder: null,
       completedOrders: [],
-      activeOrder: {
-        orderId: makeOrderId(),
-        recipe: first,
-        orderIndex: 0,
-        startTimeMs: Date.now(),
-      },
       selectedGlass: null,
       currentIngredients: {},
     });
   },
+
+  flashNextOrder: () => {
+    const { orderQueue, completedOrders, ordersTotal } = get();
+    if (orderQueue.length === 0) return;
+
+    const [recipe, ...remaining] = orderQueue;
+    const order: ActiveOrder = {
+      id: makeOrderId(),
+      recipe,
+      orderIndex: completedOrders.length + 1,
+      totalOrders: ordersTotal,
+      timerStartedAt: 0,
+      timeLimitMs: TIER_1_TIME_LIMIT_MS,
+      status: 'flashing',
+    };
+    set({ orderQueue: remaining, activeOrder: order });
+  },
+
+  activateOrder: () =>
+    set((s) => {
+      if (!s.activeOrder) return s;
+      return {
+        activeOrder: {
+          ...s.activeOrder,
+          status: 'active',
+          timerStartedAt: Date.now(),
+        },
+      };
+    }),
+
+  expireOrder: () => {
+    const s = get();
+    if (!s.activeOrder) return;
+
+    const { id: orderId, recipe, timerStartedAt, timeLimitMs } = s.activeOrder;
+
+    const attempt: DrinkAttempt = {
+      orderId,
+      recipeId: recipe.id,
+      ingredients: Object.entries(s.currentIngredients).map(([id, amount]) => ({ id, amount })),
+      startTimeMs: timerStartedAt,
+      // Treat as fully elapsed so speed bonus is 0
+      endTimeMs: timerStartedAt + timeLimitMs,
+    };
+
+    const result = scoreDrink(recipe, attempt, timeLimitMs);
+    const newCompleted = [...s.completedOrders, result.orderResult];
+    set(resolveNextState(s, newCompleted));
+  },
+
+  // ── Cup station ──────────────────────────────────────────────────────────────
 
   selectGlass: (glass) => set({ selectedGlass: glass }),
 
@@ -167,104 +236,20 @@ export const useGameStore = create<GameState>((set, get) => ({
 
   submitDrink: (endTimeMs) => {
     const s = get();
-    if (!s.activeOrder) return;
+    if (!s.activeOrder || s.activeOrder.status !== 'active') return;
 
-    const { orderId, recipe, orderIndex, startTimeMs } = s.activeOrder;
+    const { id: orderId, recipe, timerStartedAt, timeLimitMs } = s.activeOrder;
 
     const attempt: DrinkAttempt = {
       orderId,
       recipeId: recipe.id,
       ingredients: Object.entries(s.currentIngredients).map(([id, amount]) => ({ id, amount })),
-      startTimeMs,
+      startTimeMs: timerStartedAt,
       endTimeMs,
     };
 
-    const result = scoreDrink(recipe, attempt);
-    const completedOrders = [...s.completedOrders, result.orderResult];
-
-    if (s.pendingRecipes.length > 0) {
-      const [next, ...remainingRecipes] = s.pendingRecipes;
-      set({
-        pendingRecipes: remainingRecipes,
-        completedOrders,
-        activeOrder: {
-          orderId: makeOrderId(),
-          recipe: next,
-          orderIndex: orderIndex + 1,
-          startTimeMs: Date.now(),
-        },
-        selectedGlass: null,
-        currentIngredients: {},
-      });
-    } else {
-      const levelResult = {
-        level: s.currentLevel,
-        orders: completedOrders,
-        maxScore: s.ordersTotal * MAX_SCORE_PER_DRINK,
-      };
-      const summary = buildLevelSummary(levelResult);
-      set({ completedOrders, activeOrder: null });
-      get().showLevelComplete(summary);
-    }
-=======
-  retryLevel: () => set({ screen: 'game', levelSummary: null }),
-
-  // ── Order flash actions ────────────────────────────────────────────────────
-
-  initLevel: (level) => {
-    set({
-      currentLevel: level,
-      orderQueue: generateTier1Orders(TIER_1_ORDER_COUNT),
-      activeOrder: null,
-      completedOrderResults: [],
-    });
-  },
-
-  flashNextOrder: () => {
-    const { orderQueue, completedOrderResults } = get();
-    if (orderQueue.length === 0) return;
-
-    const [recipe, ...remaining] = orderQueue;
-    const order: ActiveOrder = {
-      id: `order-${++orderIdCounter}`,
-      recipe,
-      orderIndex: completedOrderResults.length + 1,
-      totalOrders: TIER_1_ORDER_COUNT,
-      timerStartedAt: 0,
-      timeLimitMs: TIER_1_TIME_LIMIT_MS,
-      status: 'flashing',
-    };
-    set({ orderQueue: remaining, activeOrder: order });
-  },
-
-  activateOrder: () => {
-    set((s) => {
-      if (!s.activeOrder) return s;
-      return {
-        activeOrder: {
-          ...s.activeOrder,
-          status: 'active',
-          timerStartedAt: Date.now(),
-        },
-      };
-    });
-  },
-
-  completeOrder: (result) => {
-    set((s) => {
-      if (!s.activeOrder) return s;
-      return {
-        activeOrder: { ...s.activeOrder, status: 'completed' },
-        completedOrderResults: [...s.completedOrderResults, result],
-      };
-    });
-  },
-
-  expireOrder: () => {
-    set((s) => {
-      if (!s.activeOrder) return s;
-      return { activeOrder: { ...s.activeOrder, status: 'expired' } };
-    });
->>>>>>> df3aeff (COF-010: Order flash system — Espresso tier-1 orders)
+    const result = scoreDrink(recipe, attempt, timeLimitMs);
+    const newCompleted = [...s.completedOrders, result.orderResult];
+    set(resolveNextState(s, newCompleted));
   },
 }));

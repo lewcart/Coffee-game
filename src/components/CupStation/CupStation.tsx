@@ -186,29 +186,33 @@ function TapButton({ id, currentAmount, inRecipe, onTap }: TapButtonProps) {
 
 interface CupStationProps {
   recipe: DrinkRecipe;
+  /** 1-based position in the current level */
   orderIndex: number;
   ordersTotal: number;
-  startTimeMs: number;
+  /** Date.now() when the countdown started (after OrderFlash word-reveal) */
+  timerStartedAt: number;
+  /** Duration of the countdown in ms */
+  timeLimitMs: number;
 }
 
-export function CupStation({ recipe, orderIndex, ordersTotal, startTimeMs }: CupStationProps) {
+export function CupStation({ recipe, orderIndex, ordersTotal, timerStartedAt, timeLimitMs }: CupStationProps) {
   const { selectedGlass, currentIngredients, selectGlass, tapIngredient, clearIngredients, submitDrink } =
     useGameStore();
 
   const [timeRemainingMs, setTimeRemainingMs] = useState(
-    Math.max(0, recipe.timeLimitMs - (Date.now() - startTimeMs)),
+    Math.max(0, timeLimitMs - (Date.now() - timerStartedAt)),
   );
   const submittedRef = useRef(false);
 
   // Reset submitted flag when order changes
   useEffect(() => {
     submittedRef.current = false;
-  }, [startTimeMs]);
+  }, [timerStartedAt]);
 
   // Countdown timer
   useEffect(() => {
     const interval = setInterval(() => {
-      const remaining = Math.max(0, recipe.timeLimitMs - (Date.now() - startTimeMs));
+      const remaining = Math.max(0, timeLimitMs - (Date.now() - timerStartedAt));
       setTimeRemainingMs(remaining);
 
       if (remaining === 0 && !submittedRef.current) {
@@ -218,10 +222,10 @@ export function CupStation({ recipe, orderIndex, ordersTotal, startTimeMs }: Cup
     }, 100);
 
     return () => clearInterval(interval);
-  }, [recipe.timeLimitMs, startTimeMs, submitDrink]);
+  }, [timeLimitMs, timerStartedAt, submitDrink]);
 
   const activeGlass = selectedGlass ?? RECIPE_GLASS[recipe.id] ?? 'medium';
-  const timerPct = (timeRemainingMs / recipe.timeLimitMs) * 100;
+  const timerPct = (timeRemainingMs / timeLimitMs) * 100;
   const timerUrgent = timerPct < 25;
 
   const recipeIngredientIds = new Set(recipe.ingredients.map((ri) => ri.id));
@@ -237,7 +241,7 @@ export function CupStation({ recipe, orderIndex, ordersTotal, startTimeMs }: Cup
       {/* ── Order header ── */}
       <header className="cs-header">
         <div className="cs-order-meta">
-          <span className="cs-order-badge">Order {orderIndex + 1}/{ordersTotal}</span>
+          <span className="cs-order-badge">Order {orderIndex}/{ordersTotal}</span>
           <h1 className="cs-drink-name">{recipe.name}</h1>
         </div>
         <ul className="cs-recipe-hint" aria-label="Recipe ingredients">
