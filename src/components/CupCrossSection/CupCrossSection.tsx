@@ -104,20 +104,21 @@ export function CupCrossSection({
   animationKey = 0,
 }: CupCrossSectionProps) {
   const layers = buildLayers(recipe);
-  const [revealedCount, setRevealedCount] = useState(animate ? 0 : layers.length);
+  const [revealedCount, setRevealedCount] = useState(0);
+  // When not animating, treat all layers as revealed without touching state.
+  const displayCount = animate ? revealedCount : layers.length;
 
   useEffect(() => {
-    if (!animate) {
-      setRevealedCount(layers.length);
-      return;
-    }
+    if (!animate) return;
 
-    setRevealedCount(0);
     const timers: ReturnType<typeof setTimeout>[] = [];
 
+    // Reset via async timer (delay 0) so the effect body stays side-effect-free.
+    // The first layer reveal is at 350 ms, so this fires well before any layer appears.
+    timers.push(setTimeout(() => setRevealedCount(0), 0));
+
     layers.forEach((_, i) => {
-      const t = setTimeout(() => setRevealedCount(i + 1), 350 + i * 650);
-      timers.push(t);
+      timers.push(setTimeout(() => setRevealedCount(i + 1), 350 + i * 650));
     });
 
     return () => timers.forEach(clearTimeout);
@@ -192,7 +193,7 @@ export function CupCrossSection({
               width={200}
               height={layer.height}
               fill={layer.fill}
-              className={`cup-layer${i < revealedCount ? ' cup-layer--visible' : ''}`}
+              className={`cup-layer${i < displayCount ? ' cup-layer--visible' : ''}`}
             />
           ))}
         </g>

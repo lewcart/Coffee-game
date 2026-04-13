@@ -200,7 +200,7 @@ export function CupStation({ recipe, orderIndex, ordersTotal, timerStartedAt, ti
     useGameStore();
 
   const [timeRemainingMs, setTimeRemainingMs] = useState(
-    Math.max(0, timeLimitMs - (Date.now() - timerStartedAt)),
+    () => Math.max(0, timeLimitMs - (Date.now() - timerStartedAt)),
   );
   const submittedRef = useRef(false);
 
