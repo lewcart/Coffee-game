@@ -107,17 +107,15 @@ export function CupCrossSection({
   const [revealedCount, setRevealedCount] = useState(animate ? 0 : layers.length);
 
   useEffect(() => {
-    if (!animate) {
-      setRevealedCount(layers.length);
-      return;
-    }
+    if (!animate) return;
 
-    setRevealedCount(0);
+    // Reset and then reveal each layer via timeouts.
+    // Deferring the reset avoids synchronous setState in effect body.
     const timers: ReturnType<typeof setTimeout>[] = [];
 
+    timers.push(setTimeout(() => setRevealedCount(0), 0));
     layers.forEach((_, i) => {
-      const t = setTimeout(() => setRevealedCount(i + 1), 350 + i * 650);
-      timers.push(t);
+      timers.push(setTimeout(() => setRevealedCount(i + 1), 350 + i * 650));
     });
 
     return () => timers.forEach(clearTimeout);

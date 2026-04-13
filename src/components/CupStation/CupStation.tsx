@@ -199,9 +199,7 @@ export function CupStation({ recipe, orderIndex, ordersTotal, timerStartedAt, ti
   const { selectedGlass, currentIngredients, selectGlass, tapIngredient, clearIngredients, submitDrink } =
     useGameStore();
 
-  const [timeRemainingMs, setTimeRemainingMs] = useState(
-    Math.max(0, timeLimitMs - (Date.now() - timerStartedAt)),
-  );
+  const [timeRemainingMs, setTimeRemainingMs] = useState(timeLimitMs);
   const submittedRef = useRef(false);
 
   // Reset submitted flag when order changes
