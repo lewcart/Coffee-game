@@ -104,9 +104,27 @@ export function CupCrossSection({
   animationKey = 0,
 }: CupCrossSectionProps) {
   const layers = buildLayers(recipe);
+<<<<<<< HEAD
   const [revealedCount, setRevealedCount] = useState(0);
   // When not animating, treat all layers as revealed without touching state.
   const displayCount = animate ? revealedCount : layers.length;
+=======
+
+  // Track key + count together so the reset is derived during render,
+  // avoiding a synchronous setState call inside the effect body.
+  const [animState, setAnimState] = useState<{ key: number; count: number }>({
+    key: animationKey,
+    count: animate ? 0 : layers.length,
+  });
+
+  // When animationKey advances the stale key means the new animation hasn't
+  // started yet — show zero layers until the first timer fires.
+  const revealedCount = !animate
+    ? layers.length
+    : animState.key === animationKey
+      ? animState.count
+      : 0;
+>>>>>>> ffb5171 (Order flash system (Espresso tier 1 orders) (#988a))
 
   useEffect(() => {
     if (!animate) return;
@@ -118,7 +136,13 @@ export function CupCrossSection({
     timers.push(setTimeout(() => setRevealedCount(0), 0));
 
     layers.forEach((_, i) => {
+<<<<<<< HEAD
       timers.push(setTimeout(() => setRevealedCount(i + 1), 350 + i * 650));
+=======
+      timers.push(
+        setTimeout(() => setAnimState({ key: animationKey, count: i + 1 }), 350 + i * 650),
+      );
+>>>>>>> ffb5171 (Order flash system (Espresso tier 1 orders) (#988a))
     });
 
     return () => timers.forEach(clearTimeout);

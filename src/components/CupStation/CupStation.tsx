@@ -200,7 +200,11 @@ export function CupStation({ recipe, orderIndex, ordersTotal, timerStartedAt, ti
     useGameStore();
 
   const [timeRemainingMs, setTimeRemainingMs] = useState(
+<<<<<<< HEAD
     () => Math.max(0, timeLimitMs - (Date.now() - timerStartedAt)),
+=======
+    () => Math.max(0, recipe.timeLimitMs - (Date.now() - startTimeMs)),
+>>>>>>> ffb5171 (Order flash system (Espresso tier 1 orders) (#988a))
   );
   const submittedRef = useRef(false);
 

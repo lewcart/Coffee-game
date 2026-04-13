@@ -15,6 +15,7 @@ export function GameScreen({ level }: GameScreenProps) {
   // Zustand set() is synchronous, so flashNextOrder() immediately sees the
   // queue that initLevel() just populated.
   useEffect(() => {
+<<<<<<< HEAD
     initLevel(level);
     flashNextOrder();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -27,6 +28,10 @@ export function GameScreen({ level }: GameScreenProps) {
   const handleExpired = useCallback(() => {
     expireOrder();
   }, [expireOrder]);
+=======
+    startLevel(level, pickRecipes(ORDERS_PER_LEVEL));
+  }, [level, startLevel]);
+>>>>>>> ffb5171 (Order flash system (Espresso tier 1 orders) (#988a))
 
   return (
     <div className="gs-screen">
@@ -45,9 +50,14 @@ export function GameScreen({ level }: GameScreenProps) {
           <CupStation
             recipe={activeOrder.recipe}
             orderIndex={activeOrder.orderIndex}
+<<<<<<< HEAD
             ordersTotal={activeOrder.totalOrders}
             timerStartedAt={activeOrder.timerStartedAt}
             timeLimitMs={activeOrder.timeLimitMs}
+=======
+            ordersTotal={ordersTotal}
+            startTimeMs={activeOrder.timerStartedAt}
+>>>>>>> ffb5171 (Order flash system (Espresso tier 1 orders) (#988a))
           />
         )}
       </div>
